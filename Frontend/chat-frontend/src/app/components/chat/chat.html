@@ -1,0 +1,106 @@
+<div class="chat-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>Chats</h3>
+      <button class="logout-btn" (click)="logout()" title="Logout">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="16 17 21 12 16 7" stroke-width="2" stroke-linecap="round"/>
+          <line x1="21" y1="12" x2="9" y2="12" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="current-user">
+      <div class="user-avatar">{{ currentUser?.username?.charAt(0).toUpperCase() }}</div>
+      <div class="user-info">
+        <div class="username">{{ currentUser?.username }}</div>
+        <div class="user-id">@{{ currentUser?.userId }}</div>
+      </div>
+    </div>
+
+    <ul class="user-list">
+      <li 
+        *ngFor="let user of users" 
+        [class.active]="user === selectedUser"
+        (click)="selectUser(user)"
+      >
+        <div class="user-avatar-small">{{ user.charAt(0).toUpperCase() }}</div>
+        <span>{{ user }}</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Chat Window -->
+  <div class="chat-window">
+    <div class="chat-header">
+      <div class="chat-user-info">
+        <div class="user-avatar-small">{{ selectedUser.charAt(0).toUpperCase() }}</div>
+        <h3>{{ selectedUser }}</h3>
+      </div>
+    </div>
+
+    <div class="messages">
+      <div 
+        *ngFor="let msg of messages" 
+        [ngClass]="msg.senderId === currentUser?.userId ? 'message sent' : 'message received'"
+      >
+        <div class="message-content">
+          <p *ngIf="msg.content">{{ msg.content }}</p>
+          
+          <div *ngIf="msg.fileName" class="file-attachment">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>{{ msg.fileName }}</span>
+          </div>
+          
+          <small class="timestamp">{{ msg.sentAt | date:'shortTime' }}</small>
+        </div>
+      </div>
+
+      <div *ngIf="messages.length === 0" class="no-messages">
+        No messages yet. Start the conversation!
+      </div>
+    </div>
+
+    <div class="input-area">
+      <input 
+        type="file" 
+        #fileInput 
+        (change)="onFileSelected($event)" 
+        style="display: none"
+      />
+      
+      <button 
+        class="attach-btn" 
+        (click)="fileInput.click()"
+        [disabled]="isLoading"
+        title="Attach file"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <input 
+        [(ngModel)]="newMessage" 
+        placeholder="Type a message..." 
+        (keyup.enter)="sendMessage()"
+        [disabled]="isLoading"
+      />
+      
+      <button 
+        class="send-btn" 
+        (click)="sendMessage()"
+        [disabled]="isLoading || !newMessage.trim()"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
