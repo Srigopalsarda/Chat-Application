@@ -31,9 +31,12 @@ export class AuthService {
       tap(response => {
         const user: User = {
           userId: response.userId,
-          username: response.username
+          username: response.username,
+          token : response.token
         };
         localStorage.setItem('currentUser', JSON.stringify(user));
+        localStorage.setItem('token', response.token);
+        console.log("token is: ",localStorage.getItem('token'));
         this.currentUserSubject.next(user);
       })
     );
@@ -41,6 +44,7 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
     this.currentUserSubject.next(null);
   }
 

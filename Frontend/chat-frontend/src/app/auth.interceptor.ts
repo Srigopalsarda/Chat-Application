@@ -7,7 +7,9 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Get your token from storage or service
-    const token = localStorage.getItem('authToken');
+    const currentUser = localStorage.getItem('currentUser');
+    const token = localStorage.getItem('token');
+    console.log(token);
 
     if (token) {
       // Clone the request and add the authorization header
@@ -19,7 +21,6 @@ export class AuthInterceptor implements HttpInterceptor {
       return next.handle(authReq);
     }
 
-// FIXME NEEDS REDIRECT TO SIGNIN PAGE
     return next.handle(req);
   }
 }

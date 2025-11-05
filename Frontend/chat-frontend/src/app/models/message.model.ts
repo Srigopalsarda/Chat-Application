@@ -11,10 +11,12 @@ export interface Message {
 export interface User {
   userId: string;
   username: string;
+  token: string
 }
 
 export interface AuthResponse {
   message: string;
   userId: string;
   username: string;
+  token: string;
 }

@@ -35,12 +35,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    
-    if (!this.currentUser) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
     this.loadMessages();
     this.startPolling();
   }
