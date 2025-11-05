@@ -19,6 +19,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final InviteKeyRepository inviteKeyRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;  // Inject JWT service
 
     @Transactional
     public AuthResponse signup(SignupRequest request) {
@@ -47,7 +48,15 @@ public class AuthService {
         inviteKey.setUsed(true);
         inviteKeyRepository.save(inviteKey);
 
-        return new AuthResponse("Signup successful!", user.getUserId(), user.getUsername());
+        // Generate JWT token
+        String token = jwtService.generateToken(user.getUserId(), user.getUsername());
+
+        return new AuthResponse(
+                "Signup successful!",
+                user.getUserId(),
+                user.getUsername(),
+                token
+        );
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -58,6 +67,14 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        return new AuthResponse("Login successful!", user.getUserId(), user.getUsername());
+        // Generate JWT token
+        String token = jwtService.generateToken(user.getUserId(), user.getUsername());
+
+        return new AuthResponse(
+                "Login successful!",
+                user.getUserId(),
+                user.getUsername(),
+                token
+        );
     }
 }
