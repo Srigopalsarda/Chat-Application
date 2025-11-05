@@ -8,8 +8,8 @@ import { AuthService } from '../../../services/auth';
   selector: 'app-signup',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.scss']
+  templateUrl: './signup.html',
+  styleUrls: ['./signup.scss']
 })
 export class SignupComponent {
   userId: string = '';

@@ -11,8 +11,8 @@ import { AuthService } from '../../services/auth';
   selector: 'app-chat',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.scss']
+  templateUrl: './chat.html',
+  styleUrls: ['./chat.scss']
 })
 export class ChatComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
