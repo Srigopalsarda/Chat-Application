@@ -6,26 +6,25 @@ import { MessageService } from '../../services/message.service';
 import { Message, User } from '../../models/message.model';
 import { interval, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth';
+import { ChatUser } from '../../models/chat-user.model';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './chat.html',
-  styleUrls: ['./chat.scss']
+  styleUrls: ['./chat.scss'],
 })
 export class ChatComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
-  selectedUser: string = 'demoUser';
   messages: Message[] = [];
   newMessage: string = '';
   isLoading: boolean = false;
   selectedFile: File | null = null;
-  
-  // Mock users for sidebar
-  users: string[] = ['demoUser', 'john', 'jane', 'alice', 'bob'];
-  
+
   private pollingSubscription?: Subscription;
+  chatUsers: ChatUser[] = [];
+  selectedUser: ChatUser | null = null;
 
   constructor(
     private authService: AuthService,
@@ -35,7 +34,23 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    this.loadMessages();
+    if (!this.currentUser) return;
+
+    this.messageService.getChatUsers(this.currentUser.userId).subscribe({
+      next: (users: ChatUser[]) => {
+        this.chatUsers = users;
+
+        if (this.chatUsers.length > 0) {
+          this.selectedUser = this.chatUsers[0];
+          this.loadMessages();
+        } else {
+          this.selectedUser = null;
+          this.messages = [];
+        }
+      },
+      error: (err) => console.error(err),
+    });
+
     this.startPolling();
   }
 
@@ -43,77 +58,64 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.stopPolling();
   }
 
+  openAddChat(): void {
+    const newUserId = prompt('Enter User ID to chat with:');
+    if (!newUserId || newUserId.trim() === '') return;
+
+    this.messageService.addChatUser(this.currentUser!.userId, newUserId).subscribe({
+      next: (newChatUser: ChatUser) => {
+        this.chatUsers.push(newChatUser);
+
+        if (!this.selectedUser) {
+          this.selectedUser = newChatUser;
+          this.loadMessages();
+        }
+      },
+      error: () => {
+        alert('This user does not exist or chat already exists.');
+      },
+    });
+  }
+
   loadMessages(): void {
-    if (!this.currentUser) return;
+    if (!this.currentUser || !this.selectedUser) return;
 
-    this.messageService.getChatMessages(this.currentUser.userId, this.selectedUser).subscribe({
-      next: (messages) => {
-        this.messages = messages;
-        setTimeout(() => this.scrollToBottom(), 100);
-      },
-      error: (error) => {
-        console.error('Failed to load messages:', error);
-      }
-    });
+    this.messageService
+      .getChatMessages(this.currentUser.userId, this.selectedUser.userId)
+      .subscribe({
+        next: (messages) => {
+          this.messages = messages;
+          setTimeout(() => this.scrollToBottom(), 100);
+        },
+        error: (error) => console.error('Failed to load messages:', error),
+      });
   }
 
+  onFileSelected(event:any){
+
+  }
   sendMessage(): void {
-    if (!this.newMessage.trim() || !this.currentUser) return;
+    if (!this.newMessage.trim() || !this.currentUser || !this.selectedUser) return;
 
     this.isLoading = true;
 
-    this.messageService.sendMessage(
-      this.currentUser.userId,
-      this.selectedUser,
-      this.newMessage
-    ).subscribe({
-      next: (message) => {
-        this.messages.push(message);
-        this.newMessage = '';
-        this.scrollToBottom();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Failed to send message:', error);
-        alert('Failed to send message');
-        this.isLoading = false;
-      }
-    });
+    this.messageService
+      .sendMessage(this.currentUser.userId, this.selectedUser.userId, this.newMessage)
+      .subscribe({
+        next: (message) => {
+          this.messages.push(message);
+          this.newMessage = '';
+          this.scrollToBottom();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Failed to send message:', error);
+          this.isLoading = false;
+        },
+      });
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
-      this.uploadFile();
-    }
-  }
-
-  uploadFile(): void {
-    if (!this.selectedFile || !this.currentUser) return;
-
-    this.isLoading = true;
-
-    this.messageService.uploadFile(
-      this.currentUser.userId,
-      this.selectedUser,
-      this.selectedFile
-    ).subscribe({
-      next: (message) => {
-        this.messages.push(message);
-        this.selectedFile = null;
-        this.scrollToBottom();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Failed to upload file:', error);
-        alert('Failed to upload file');
-        this.isLoading = false;
-      }
-    });
-  }
-
-  selectUser(user: string): void {
+  selectUser(user: ChatUser): void {
     this.selectedUser = user;
     this.messages = [];
     this.loadMessages();
@@ -125,7 +127,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private startPolling(): void {
-    // Poll for new messages every 3 seconds
     this.pollingSubscription = interval(3000).subscribe(() => {
       this.loadMessages();
     });
