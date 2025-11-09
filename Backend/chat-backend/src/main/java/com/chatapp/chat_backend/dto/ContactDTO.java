@@ -1,4 +1,3 @@
 package com.chatapp.chat_backend.dto;
 
-public class ContactDto {
-}
+public record ContactDTO(String userId, String username) {}

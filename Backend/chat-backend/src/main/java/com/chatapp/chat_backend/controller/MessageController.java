@@ -1,5 +1,6 @@
 package com.chatapp.chat_backend.controller;
 
+import com.chatapp.chat_backend.dto.AddChatRequest;
 import com.chatapp.chat_backend.entity.Message;
 import com.chatapp.chat_backend.service.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -55,4 +56,5 @@ public class MessageController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 }
